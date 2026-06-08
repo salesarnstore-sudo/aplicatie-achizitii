@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  /* Nu mai pune blocul de 'webpack' aici */
 };
 
 export default nextConfig;
