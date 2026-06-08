@@ -13,6 +13,13 @@ function CardVanzari({ comanda, onUpdate }: { comanda: any, onUpdate: () => void
   const [showConfirmLivrare, setShowConfirmLivrare] = useState(false);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
 
+  // Funcție pentru culoarea umbrei în funcție de statusul comenzii
+  const getShadowColor = () => {
+    if (comanda.status === 'Se poate produce') return 'shadow-emerald-200';
+    if (comanda.status === 'Nu se poate produce') return 'shadow-red-200';
+    return 'shadow-amber-200'; // Default: Asteapta raspuns
+  };
+
   const handleAction = async (nextStep: string) => {
     const { error } = await supabase.from('comenzi').update({ status_producator: nextStep }).eq('id', comanda.id);
     if (!error) { onUpdate(); setShowConfirmLivrare(false); }
@@ -26,7 +33,7 @@ function CardVanzari({ comanda, onUpdate }: { comanda: any, onUpdate: () => void
   };
 
   return (
-    <div className={`bg-white p-6 rounded-3xl border shadow-xl w-72 flex flex-col relative ${comanda.status === 'Se poate produce' ? 'shadow-emerald-200' : 'shadow-amber-200'}`}>
+    <div className={`bg-white p-6 rounded-3xl border shadow-xl w-72 flex flex-col relative ${getShadowColor()}`}>
       {comanda.status_producator === 'Intrebari Furnizori' && !showConfirmDelete && (
         <button onClick={() => setShowConfirmDelete(true)} className="absolute top-4 right-4 text-gray-400 hover:text-red-500 z-10"><Trash2 size={16}/></button>
       )}

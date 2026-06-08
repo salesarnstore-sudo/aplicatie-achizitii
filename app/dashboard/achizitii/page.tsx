@@ -21,6 +21,12 @@ function CardComanda({ comanda, onUpdate, etape }: { comanda: any, onUpdate: () 
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const [facturaUrl, setFacturaUrl] = useState<string | null>(null);
 
+  const getShadowColor = () => {
+    if (status === 'Se poate produce') return 'shadow-emerald-200';
+    if (status === 'Nu se poate produce') return 'shadow-red-200';
+    return 'shadow-amber-200';
+  };
+
   useEffect(() => {
     if (comanda.factura_id) {
         supabase.from('facturi').select('url').eq('id', comanda.factura_id).single().then(({data}) => {
@@ -69,7 +75,7 @@ function CardComanda({ comanda, onUpdate, etape }: { comanda: any, onUpdate: () 
   };
 
   return (
-    <div className={`bg-white p-6 rounded-3xl border shadow-xl w-72 flex flex-col relative ${comanda.status === 'Se poate produce' ? 'shadow-emerald-200' : 'shadow-amber-200'}`}>
+    <div className={`bg-white p-6 rounded-3xl border shadow-xl w-72 flex flex-col relative ${getShadowColor()}`}>
       {comanda.tip_comanda === 'Comanda Restocare' && comanda.status_producator === 'Comenzi de Plasat' && !showConfirmDelete && (
         <button onClick={() => setShowConfirmDelete(true)} className="absolute top-4 right-4 text-gray-400 hover:text-red-500 z-10"><Trash2 size={16} /></button>
       )}
@@ -104,6 +110,7 @@ function CardComanda({ comanda, onUpdate, etape }: { comanda: any, onUpdate: () 
         <select className="w-full text-xs border p-2 rounded" value={status} onChange={(e) => setStatus(e.target.value)}>
           <option value="Asteapta raspuns">Asteapta raspuns</option>
           <option value="Se poate produce">Se poate produce</option>
+          <option value="Nu se poate produce">Nu se poate produce</option>
         </select>
         <input type="file" onChange={handleFileUpload} className="hidden" id={`file-${comanda.id}`} />
         <label htmlFor={`file-${comanda.id}`} className="cursor-pointer block w-full bg-gray-100 p-2 rounded-xl text-center text-[10px] font-bold"><Paperclip size={12} className="inline"/> Atașează</label>
