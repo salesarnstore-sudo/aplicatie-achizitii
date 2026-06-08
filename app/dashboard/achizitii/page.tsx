@@ -109,8 +109,6 @@ function CardComanda({ comanda, onUpdate, etape }: { comanda: any, onUpdate: () 
         <label htmlFor={`file-${comanda.id}`} className="cursor-pointer block w-full bg-gray-100 p-2 rounded-xl text-center text-[10px] font-bold"><Paperclip size={12} className="inline"/> Atașează</label>
         <button onClick={handleSave} className="w-full bg-black text-white py-2 rounded-xl text-xs font-bold">Salvează Date</button>
         {comanda.status_producator !== 'Comenzi Livrate' && (<button onClick={handleNextStep} className="w-full bg-emerald-600 text-white py-2 rounded-xl text-xs font-bold">Următoarea Etapă</button>)}
-        
-        {/* Buton Factura mutat jos */}
         {facturaUrl && (
             <a href={facturaUrl} target="_blank" rel="noopener noreferrer" className="block w-full bg-blue-100 text-blue-700 py-2 rounded-xl text-xs font-bold text-center mt-2 flex items-center justify-center gap-2">
                 <FileText size={14}/> Vezi Factura
@@ -129,6 +127,8 @@ export default function AchizitiiDashboard() {
   const [comenzi, setComenzi] = useState<any[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form, setForm] = useState({ denumire_produs: '', cantitate: '', dimensiuni: '', finisaj_tesatura: '', pret_vanzare: '', discount_maxim: '', observatii_achizitii: '', producator: '', data_estimata_receptie: '' });
+  const [fileProdus, setFileProdus] = useState<File | null>(null);
+  const [fileFinisaj, setFileFinisaj] = useState<File | null>(null);
   const etape = ['Intrebari Furnizori', 'Comenzi de Plasat', 'Comenzi in Lucru', 'Comenzi in Tranzit', 'Comenzi in Depozit', 'Comenzi Livrate'];
 
   useEffect(() => {
@@ -145,8 +145,14 @@ export default function AchizitiiDashboard() {
   useEffect(() => { loadData(); }, []);
 
   const handleSaveRestocare = async () => {
+    let imagine_produs_url = '', imagine_finisaj_url = '';
+    if (fileProdus) { const { data } = await supabase.storage.from('comenzi-media').upload(`${Date.now()}_produs`, fileProdus); if (data) imagine_produs_url = supabase.storage.from('comenzi-media').getPublicUrl(data.path).data.publicUrl; }
+    if (fileFinisaj) { const { data } = await supabase.storage.from('comenzi-media').upload(`${Date.now()}_finisaj`, fileFinisaj); if (data) imagine_finisaj_url = supabase.storage.from('comenzi-media').getPublicUrl(data.path).data.publicUrl; }
+    
     const { error } = await supabase.from('comenzi').insert([{ 
         ...form, 
+        imagine_produs_url,
+        imagine_finisaj_url,
         tip_comanda: 'Comanda Restocare', 
         status_producator: 'Comenzi de Plasat', 
         status: 'Se poate produce',
@@ -214,7 +220,11 @@ export default function AchizitiiDashboard() {
                 <div className="bg-white p-8 rounded-3xl w-96 space-y-2 max-h-[90vh] overflow-y-auto">
                     <h3 className="font-bold mb-4">Restocare Nouă</h3>
                     {Object.keys(form).map(key => (<input key={key} type={key === 'data_estimata_receptie' ? 'date' : 'text'} className="w-full border p-2 rounded" placeholder={key} onChange={(e) => setForm({...form, [key]: e.target.value})} />))}
-                    <button onClick={handleSaveRestocare} className="w-full bg-black text-white py-2 rounded-xl font-bold">Salvează</button>
+                    <label className="text-[10px] font-bold block mt-2">Poză Produs</label>
+                    <input type="file" onChange={(e) => setFileProdus(e.target.files?.[0] || null)} />
+                    <label className="text-[10px] font-bold block mt-2">Poză Finisaj</label>
+                    <input type="file" onChange={(e) => setFileFinisaj(e.target.files?.[0] || null)} />
+                    <button onClick={handleSaveRestocare} className="w-full bg-black text-white py-2 rounded-xl font-bold mt-4">Salvează</button>
                 </div>
             </div>
         )}
