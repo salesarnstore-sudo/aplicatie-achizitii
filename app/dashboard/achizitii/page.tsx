@@ -98,6 +98,16 @@ function CardComanda({ comanda, onUpdate, etape }: { comanda: any, onUpdate: () 
         <p className="text-[9px] font-bold text-gray-400 uppercase">FINISAJ: {finisaj || 'Nespecificat'}</p>
         <img src={comanda.imagine_finisaj_url} className="w-full h-24 object-contain bg-gray-50 rounded-xl" />
       </div>
+
+      {/* Grid atașamente */}
+      {comanda.atasamente && comanda.atasamente.length > 0 && (
+        <div className="grid grid-cols-4 gap-1 mb-4">
+            {comanda.atasamente.map((url: string, index: number) => (
+                <img key={index} src={url} className="w-full aspect-square object-cover rounded bg-gray-100" />
+            ))}
+        </div>
+      )}
+
       <div className="text-[11px] text-gray-600 mb-4 font-bold">Cantitate: {comanda.cantitate} | Dimensiuni: {comanda.dimensiuni}</div>
       <div className="space-y-2 mb-4">
         <input className="w-full text-xs border p-2 rounded" placeholder="Producător" value={producator} onChange={(e) => setProducator(e.target.value)} />
