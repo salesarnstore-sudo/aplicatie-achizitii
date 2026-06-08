@@ -10,14 +10,12 @@ const supabase = createClient(
 );
 
 function CardVanzari({ comanda, onUpdate }: { comanda: any, onUpdate: () => void }) {
-  const [showConfirm, setShowConfirm] = useState(false);
   const [showConfirmLivrare, setShowConfirmLivrare] = useState(false);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
-  const [selectedImg, setSelectedImg] = useState<string | null>(null);
 
   const handleAction = async (nextStep: string) => {
     const { error } = await supabase.from('comenzi').update({ status_producator: nextStep }).eq('id', comanda.id);
-    if (!error) { onUpdate(); setShowConfirm(false); setShowConfirmLivrare(false); }
+    if (!error) { onUpdate(); setShowConfirmLivrare(false); }
     else alert("Eroare: " + error.message);
   };
 
@@ -29,11 +27,6 @@ function CardVanzari({ comanda, onUpdate }: { comanda: any, onUpdate: () => void
 
   return (
     <div className={`bg-white p-6 rounded-3xl border shadow-xl w-72 flex flex-col relative ${comanda.status === 'Se poate produce' ? 'shadow-emerald-200' : 'shadow-amber-200'}`}>
-      {selectedImg && (
-        <div className="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-4" onClick={() => setSelectedImg(null)}>
-          <img src={selectedImg} className="max-w-full max-h-full object-contain" />
-        </div>
-      )}
       {comanda.status_producator === 'Intrebari Furnizori' && !showConfirmDelete && (
         <button onClick={() => setShowConfirmDelete(true)} className="absolute top-4 right-4 text-gray-400 hover:text-red-500 z-10"><Trash2 size={16}/></button>
       )}
@@ -44,17 +37,6 @@ function CardVanzari({ comanda, onUpdate }: { comanda: any, onUpdate: () => void
         <p className="text-[9px] font-bold text-gray-400 uppercase">FINISAJ: {comanda.finisaj_tesatura}</p>
         <img src={comanda.imagine_finisaj_url} className="w-full h-24 object-cover rounded-xl bg-gray-100" />
       </div>
-      
-      {comanda.atasamente && comanda.atasamente.length > 0 && (
-        <div className="grid grid-cols-4 gap-1 mb-4">
-            {comanda.atasamente.map((url: string, index: number) => (
-                <div key={index} onClick={() => setSelectedImg(url)} className="w-full aspect-square rounded bg-gray-100 overflow-hidden cursor-pointer">
-                    <img src={url} className="w-full h-full object-cover" />
-                </div>
-            ))}
-        </div>
-      )}
-
       <div className="text-[11px] text-gray-600 bg-gray-50 p-3 rounded-lg mb-4 space-y-1">
         <p>Obs. Achiziții: {comanda.observatii_achizitii || 'Nicio observație'}</p>
         <p className="font-bold">Cantitate: {comanda.cantitate} | Dimensiuni: {comanda.dimensiuni}</p>
@@ -66,13 +48,6 @@ function CardVanzari({ comanda, onUpdate }: { comanda: any, onUpdate: () => void
       
       {showConfirmDelete && (
          <div className="mb-4 p-2 bg-red-50 rounded text-center"><p className="text-[10px] font-bold mb-1">Sigur ștergi?</p><button onClick={handleDelete} className="bg-red-600 text-white px-4 py-1 rounded text-[10px] font-bold">DA</button></div>
-      )}
-      
-      {comanda.status === 'Se poate produce' && comanda.status_producator === 'Intrebari Furnizori' && !showConfirm && !showConfirmDelete && (
-        <button onClick={() => setShowConfirm(true)} className="w-full bg-emerald-600 text-white py-2 rounded-xl text-xs font-bold mb-2">Avans Încasat & Plasare Comandă</button>
-      )}
-      {showConfirm && (
-        <div className="mb-4 p-2 bg-emerald-50 rounded text-center"><p className="text-[10px] font-bold mb-1">Confirmi?</p><button onClick={() => handleAction('Comenzi de Plasat')} className="bg-emerald-600 text-white px-4 py-1 rounded text-[10px] font-bold">DA</button></div>
       )}
       
       {comanda.status_producator === 'Comenzi in Depozit' && !showConfirmLivrare && !showConfirmDelete && (
@@ -181,6 +156,7 @@ export default function VanzariDashboard() {
             )}
         </div>
         
+        {/* ... Modaluri ... */}
         {isModalOpen && (
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                 <div className="bg-white p-8 rounded-3xl w-96 max-h-[90vh] overflow-y-auto space-y-2">
@@ -245,12 +221,13 @@ export default function VanzariDashboard() {
                 <input className="border p-2 rounded-xl w-64 text-sm" placeholder="Caută..." onChange={(e) => setSearchTerm(e.target.value)} />
                 <table className="w-full bg-white rounded-xl shadow-sm border text-xs">
                     <thead className="bg-gray-50 text-[10px] uppercase text-gray-500 font-bold">
-                        <tr><th className="p-4">Produs</th><th className="p-4">Denumire</th><th className="p-4">Dimensiuni</th><th className="p-4">Finisaj</th><th className="p-4">Preț/Disc</th><th className="p-4">Recepție</th><th className="p-4">Observații</th></tr>
+                        <tr><th className="p-4">Produs</th><th className="p-4">Denumire</th><th className="p-4">Cantitate</th><th className="p-4">Dimensiuni</th><th className="p-4">Finisaj</th><th className="p-4">Preț/Disc</th><th className="p-4">Recepție</th><th className="p-4">Observații</th></tr>
                     </thead>
                     <tbody>{restocari.filter(r => r.denumire_produs?.toLowerCase().includes(searchTerm.toLowerCase())).map(r => (
                         <tr key={r.id} className="border-t font-bold">
                             <td className="p-4"><img src={r.imagine_produs_url} className="w-12 h-12 object-cover rounded" /></td>
                             <td className="p-4">{r.denumire_produs}</td>
+                            <td className="p-4">{r.cantitate}</td>
                             <td className="p-4">{r.dimensiuni}</td>
                             <td className="p-4"><img src={r.imagine_finisaj_url} className="w-12 h-12 object-cover rounded" /></td>
                             <td className="p-4">{r.pret_vanzare} / {r.discount_maxim}%</td>
