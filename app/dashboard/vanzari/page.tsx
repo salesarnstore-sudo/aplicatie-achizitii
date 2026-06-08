@@ -44,7 +44,6 @@ function CardVanzari({ comanda, onUpdate }: { comanda: any, onUpdate: () => void
         <img src={comanda.imagine_finisaj_url} className="w-full h-24 object-cover rounded-xl bg-gray-100" />
       </div>
 
-      {/* Grid atașamente */}
       {comanda.atasamente && comanda.atasamente.length > 0 && (
         <div className="grid grid-cols-4 gap-1 mb-4">
             {comanda.atasamente.map((url: string, index: number) => (
@@ -99,7 +98,8 @@ export default function VanzariDashboard() {
         const { data } = await supabase.from('comenzi').select('*').eq('agent_id', user.id); 
         setComenzi(data || []); 
     }
-    const { data: res } = await supabase.from('comenzi').select('*').eq('tip_comanda', 'Comanda Restocare');
+    // Filtrare specifică pentru restocări în etapa "Comenzi in Lucru"
+    const { data: res } = await supabase.from('comenzi').select('*').eq('tip_comanda', 'Comanda Restocare').eq('status_producator', 'Comenzi in Lucru');
     setRestocari(res || []);
     const { data: f } = await supabase.from('facturi').select('*');
     setFacturi(f || []);
@@ -190,9 +190,24 @@ export default function VanzariDashboard() {
                 </div>
             </div>
         )}
-        
-        {/* ... (restul dashboard-ului ramane intact) */}
-        
+
+        {isFacturaModalOpen && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                <div className="bg-white p-8 rounded-3xl w-[500px] max-h-[90vh] overflow-y-auto space-y-4">
+                    <h3 className="font-bold">Factură Nouă</h3>
+                    <input className="w-full border p-2 rounded" placeholder="Număr Factură" onChange={(e) => setForm({...form, numar_factura: e.target.value})} />
+                    <input type="file" onChange={(e) => setFacturaFile(e.target.files?.[0] || null)} />
+                    {comenzi.filter(c => c.status_producator === 'Intrebari Furnizori' && c.status === 'Se poate produce' && !c.factura_id).map(c => (
+                        <label key={c.id} className="flex items-center gap-2 p-2 border rounded text-sm font-bold cursor-pointer">
+                            <input type="checkbox" onChange={(e) => e.target.checked ? setSelectate([...selectate, c.id]) : setSelectate(selectate.filter(i => i !== c.id))} />
+                            {c.denumire_produs}
+                        </label>
+                    ))}
+                    <button onClick={handleCreateFactura} disabled={loading} className="w-full bg-black text-white py-2 rounded-xl">{loading ? 'Se salvează...' : 'Salvează'}</button>
+                </div>
+            </div>
+        )}
+
         {activeView === 'Facturi' ? (
             <div className="space-y-6">
                 {facturi.map(f => (
