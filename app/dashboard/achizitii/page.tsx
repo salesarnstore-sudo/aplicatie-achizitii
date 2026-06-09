@@ -20,12 +20,19 @@ function CardComanda({ comanda, onUpdate, etape }: { comanda: any, onUpdate: () 
   const [status, setStatus] = useState(comanda.status || 'Asteapta raspuns');
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const [facturaUrl, setFacturaUrl] = useState<string | null>(null);
+  const [selectedImg, setSelectedImg] = useState<string | null>(null);
 
   const getShadowColor = () => {
     if (status === 'Se poate produce') return 'shadow-emerald-200';
     if (status === 'Nu se poate produce') return 'shadow-red-200';
     return 'shadow-amber-200';
   };
+
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') setSelectedImg(null); };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, []);
 
   useEffect(() => {
     if (comanda.factura_id) {
@@ -45,7 +52,6 @@ function CardComanda({ comanda, onUpdate, etape }: { comanda: any, onUpdate: () 
       status: status,
       data_estimata_receptie: dataReceptie || null
     }).eq('id', comanda.id);
-
     if (error) alert("Eroare la salvare: " + error.message);
     else onUpdate();
   };
@@ -76,6 +82,11 @@ function CardComanda({ comanda, onUpdate, etape }: { comanda: any, onUpdate: () 
 
   return (
     <div className={`bg-white p-6 rounded-3xl border shadow-xl w-72 flex flex-col relative ${getShadowColor()}`}>
+      {selectedImg && (
+        <div className="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-4" onClick={() => setSelectedImg(null)}>
+          <img src={selectedImg} className="max-w-full max-h-full object-contain cursor-pointer" />
+        </div>
+      )}
       {comanda.tip_comanda === 'Comanda Restocare' && comanda.status_producator === 'Comenzi de Plasat' && !showConfirmDelete && (
         <button onClick={() => setShowConfirmDelete(true)} className="absolute top-4 right-4 text-gray-400 hover:text-red-500 z-10"><Trash2 size={16} /></button>
       )}
@@ -94,16 +105,15 @@ function CardComanda({ comanda, onUpdate, etape }: { comanda: any, onUpdate: () 
         <p><span className="font-bold">Termen Client:</span> {comanda.perioada_livrare_client || 'Nespecificat'}</p>
       </div>
       <div className="space-y-2 mb-4">
-        <img src={comanda.imagine_produs_url} className="w-full h-24 object-contain bg-gray-50 rounded-xl" />
+        <img src={comanda.imagine_produs_url} onClick={() => setSelectedImg(comanda.imagine_produs_url)} className="w-full h-24 object-contain bg-gray-50 rounded-xl cursor-pointer" />
         <p className="text-[9px] font-bold text-gray-400 uppercase">FINISAJ: {finisaj || 'Nespecificat'}</p>
-        <img src={comanda.imagine_finisaj_url} className="w-full h-24 object-contain bg-gray-50 rounded-xl" />
+        <img src={comanda.imagine_finisaj_url} onClick={() => setSelectedImg(comanda.imagine_finisaj_url)} className="w-full h-24 object-contain bg-gray-50 rounded-xl cursor-pointer" />
       </div>
 
-      {/* Grid atașamente */}
       {comanda.atasamente && comanda.atasamente.length > 0 && (
         <div className="grid grid-cols-4 gap-1 mb-4">
             {comanda.atasamente.map((url: string, index: number) => (
-                <img key={index} src={url} className="w-full aspect-square object-cover rounded bg-gray-100" />
+                <img key={index} src={url} onClick={() => setSelectedImg(url)} className="w-full aspect-square object-cover rounded bg-gray-100 cursor-pointer" />
             ))}
         </div>
       )}
